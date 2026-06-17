@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>My Simple HTML Page</title>
+		<style>
+			.quiz-box {
+				text-align: center;
+				border: 5px solid rgb(50, 50, 100);
+				font-size: 32px;
+				background-color: rgb(120, 200, 255);
+				width: 50%;
+			}
+			h1 {
+				font-size: 36px;
+			}
+			.quiz-box div {
+				margin-top: 5%;
+				margin-bottom: 5%;
+			}
+			input[type="radio"] {
+				width: 2em;
+				height: 2em;
+				vertical-align: middle;
+			}
+			button {
+				border: 3px solid rgb(20, 20, 80);
+				width: 30%;
+				background-color: rgb(50, 100, 230);
+				font-size: 30px;
+				padding: 1% 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="quiz-box">
+			<div><h1>Pokemon Type Matchup Quiz</h1></div>
+			<div id="scoreboard"></div>
+			<div id="output"></div>
+			<div class="answers" id="answers">
+				<input type="radio" name="answer" value="no-damage" id="no-damage" required checked/>
+				<label for="no-damage">x0</label>
+				<input type="radio" name="answer" value="quarter-damage" id="quarter-damage" />
+				<label for="quarter-damage">x1/4</label>
+				<input type="radio" name="answer" value="half-damage" id="half-damage" />
+				<label for="half-damage">x1/2</label>
+				<input type="radio" name="answer" value="normal-damage" id="normal-damage" />
+				<label for="normal-damage">x1</label>
+				<input type="radio" name="answer" value="double-damage" id="double-damage" />
+				<label for="double-damage">x2</label>
+				<input type="radio" name="answer" value="quadruple-damage" id="quadruple-damage" />
+				<label for="quadruple-damage">x4</label>
+			</div>
+			<div id="button"></div>
+			<div id="correct-incorrect"></div>
+		</div>
+	</body>
+	<script src="dual_type_matchups.js"></script>
+	<script>
+		let types = [
+			"normal",
+			"fire",
+			"water",
+			"grass",
+			"electric",
+			"ice",
+			"fighting",
+			"poison",
+			"ground",
+			"flying",
+			"psychic",
+			"bug",
+			"rock",
+			"ghost",
+			"dragon",
+			"dark",
+			"steel",
+			"fairy",
+			"none"
+		];
+
+		damage_str_to_value = {
+			"no-damage": 'x0',
+			"quarter-damage": 'x1/4',
+			"half-damage": 'x1/2',
+			"normal-damage": 'x1',
+			"double-damage": 'x2',
+			"quadruple-damage": 'x4'
+		};
+
+		arrow_img = `<img src='images/arrow.png'>`;
+
+		attack_type = '';
+		defending_type1 = '';
+		defending_type2 = '';
+
+		function displayQuestion() {
+			attack_type = 'none';
+			while(attack_type == 'none') {
+				
+				attack_type = types[Math.floor(Math.random() * types.length)];
+			
+			}
+
+			attack_type_img = `<img src='images/${attack_type}type.png'>`;
+
+			defending_type1 = 'none';
+			defending_type2 = 'none';
+			while(defending_type1 == 'none' && defending_type2 == 'none') {
+				
+				defending_type1 = types[Math.floor(Math.random() * types.length)];
+				defending_type2 = types[Math.floor(Math.random() * types.length)];
+
+				if (defending_type1 == 'none') {
+
+					temp_type = defending_type2;
+					defending_type1 = temp_type;
+					defending_type2 = 'none';
+
+				}
+
+				if (defending_type1 == defending_type2) {
+
+					defending_type2 = 'none';
+
+				}
+
+			}
+
+			defending_type1_img = `<img src='images/${defending_type1}type.png'>`;
+			defending_type2_img = '';
+			separator = ''
+			if (defending_type2 != 'none') {
+				defending_type2_img = `<img src='images/${defending_type2}type.png'>`;
+			}
+
+			document.getElementById('output').innerHTML = `
+				${attack_type_img} ${arrow_img} ${defending_type1_img} ${defending_type2_img}
+			`;
+
+			document.getElementById('button').innerHTML = `
+				<button onclick='getAnswer()'>Submit</button>
+			`
+
+			document.getElementById('no-damage').checked = true;
+
+			correct_message = document.getElementById('correct-incorrect').innerHTML = '';
+		}
+
+
+		correct = 0;
+		wrong = 0;
+		function updateScoreboard(amount) {
+
+			if (amount > 0) {
+				correct++;
+			} else if (amount < 0) {
+				wrong++;
+			}
+
+			document.getElementById('scoreboard').innerHTML = `
+				Correct: ${correct} | Wrong: ${wrong}
+			`
+		}
+
+		updateScoreboard(0);
+		displayQuestion();
+
+		function getAnswer() {
+
+			selected_answer = document.querySelector('input[name="answer"]:checked').value;
+
+			correct_message = document.getElementById('correct-incorrect');
+
+			correct_value = 0;
+
+			if (`${defending_type1}/${defending_type2}` in type_matchups) {
+				if (selected_answer == type_matchups[`${defending_type1}/${defending_type2}`][attack_type]) {
+					correct_message.innerHTML = "Correct!";
+					correct_value = 1;
+				} else {
+					correct_message.innerHTML = `Wrong! Answer = ${damage_str_to_value[type_matchups[`${defending_type1}/${defending_type2}`][attack_type]]}`;
+					correct_value = -1;
+				}
+			} else {
+				if (selected_answer == type_matchups[`${defending_type2}/${defending_type1}`][attack_type]) {
+					correct_message.innerHTML = "Correct!";
+					correct_value = 1;
+				} else {
+					correct_message.innerHTML = `Wrong! Answer = ${damage_str_to_value[type_matchups[`${defending_type2}/${defending_type1}`][attack_type]]}`;
+					correct_value = -1;
+				}
+			}
+
+			updateScoreboard(correct_value);
+
+			document.getElementById('button').innerHTML = `
+				<button onclick='displayQuestion()'>Next Question</button>
+			`
+
+		}
+		
+	</script>
+</html>
